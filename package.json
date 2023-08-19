@@ -1,0 +1,22 @@
+{
+  "name": "node_todo",
+  "version": "1.0.0",
+  "description": "Todo List Simple  Develop a simple command line Todo app using TypeScript, Node.js and Inquirer.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/inquirer": "^9.0.3",
+    "@types/node": "^20.5.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.10",
+    "node-fetch": "^3.3.2"
+  }
+}
