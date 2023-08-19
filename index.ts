@@ -1,81 +1,57 @@
-import fetch from 'node-fetch';
-import inquirer from 'inquirer';
+import inquirer from "inquirer"; //import modules
+import chalk from "chalk";
 
-class CurrencyConverter {
-    private apiUrl = 'https://api.exchangeratesapi.io/latest';
-    private exchangeRates: Record<string, number> = {};
-    private lastUpdateTime: number = 0;
+let exchangeRateApiPKR = "https://v6.exchangerate-api.com/v6/5b72248148edc444639e6f1d/latest/PKR"; //
+//console.log(exchangeRateApi); // api to give exchange rate according to PKR
 
-    async updateExchangeRates(): Promise<void> {
-        try {
-            const currentTime = Date.now();
-            if (currentTime - this.lastUpdateTime >= 3600000) {
-                const response = await fetch(this.apiUrl);
-                const data: { rates: Record<string, number> } = await response.json();
+let fetchData = async (data: any) => { // getting response from API
+    let fetchData = await fetch(data);
+    let response = await fetchData.json();
+    return response.conversion_rates; // targeting only conversion rates
+};
+let data = await fetchData(exchangeRateApiPKR);
+//console.log(data);
 
-                if (data.rates) {
-                    this.exchangeRates = data.rates;
-                    this.lastUpdateTime = currentTime;
-                    console.log('Exchange rates updated.');
-                } else {
-                    throw new Error('Failed to fetch exchange rates.');
-                }
-            } else {
-                console.log('Using cached exchange rates.');
-            }
-        } catch (error: any) {
-            throw new Error('Failed to update exchange rates.');
-        }
+let countries = Object.keys(data); //obtaining countries name from data
+
+let firstCountry = await inquirer.prompt( // First currency
+    {
+        type: "list",
+        message: "Please select the first country: ",
+        name: "name",
+        choices: countries
     }
+);
+console.log(`Converting from: ${chalk.bold.greenBright(firstCountry.name)}`);
 
-    async convert(amount: number, fromCurrency: string, toCurrency: string): Promise<number> {
-        if (!(fromCurrency in this.exchangeRates) || !(toCurrency in this.exchangeRates)) {
-            throw new Error('Unsupported currencies.');
-        }
-
-        const fromRate = this.exchangeRates[fromCurrency];
-        const toRate = this.exchangeRates[toCurrency];
-
-        const convertedAmount = (amount / fromRate) * toRate;
-        return convertedAmount;
-    }
-
-    async askForCurrencies(): Promise<{ fromCurrency: string; toCurrency: string }> {
-        const currencies = Object.keys(this.exchangeRates);
-
-        const questions = [
-            {
-                type: 'list',
-                name: 'fromCurrency',
-                message: 'Select the source currency:',
-                choices: currencies,
-            },
-            {
-                type: 'list',
-                name: 'toCurrency',
-                message: 'Select the target currency:',
-                choices: currencies,
-            },
-        ];
-
-        const answers = await inquirer.prompt(questions);
-        return answers;
-    }
+let userMoney = await inquirer.prompt( //amount to be converted
+{
+    type: "number",
+    message: `Please enter the money in ${chalk.bold.greenBright(firstCountry.name)}: `,
+    name: "money",
 }
+);
+//console.log(`You entered amount ${chalk.bold.greenBright(userMoney.money)} in ${chalk.bold.greenBright(firstCountry.name)}`);
 
-(async () => {
-    const converter = new CurrencyConverter();
 
-    try {
-        await converter.updateExchangeRates();
+let secondCountry = await inquirer.prompt( // second currency
+{
+    type: "list",
+    message: "Please select the second country: ",
+    name: "name",
+    choices: countries
+}
+);
+console.log(`Converting to: ${chalk.bold.greenBright(secondCountry.name)}`);
 
-        const amountToConvert = 100;
-        const { fromCurrency, toCurrency } = await converter.askForCurrencies();
+let conversionAPI = `https://v6.exchangerate-api.com/v6/5b72248148edc444639e6f1d/pair/${firstCountry.name}/${secondCountry.name}/${userMoney.money}` //conversion API
+//console.log(conversionAPI);
 
-        const convertedAmount = await converter.convert(amountToConvert, fromCurrency, toCurrency);
 
-        console.log(`${amountToConvert} ${fromCurrency} is approximately ${convertedAmount.toFixed(2)} ${toCurrency}.`);
-    } catch (error) {
-        console.error('An error occurred:', error.message);
-    }
-})();
+let conversionData = async (data: any) => {
+    let conversionData = await fetch(data);
+    let response = await conversionData.json();
+    return response.conversion_result;
+};
+let conversion_result = await conversionData(conversionAPI);
+console.log(`${userMoney.money} ${firstCountry.name} equals to ${conversion_result} ${secondCountry.name}. `);
